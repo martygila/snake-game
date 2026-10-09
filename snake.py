@@ -1,71 +1,56 @@
-import pygame
-import random
 import sys
+from snake_constants import *
+from snake_functions import *
 
-# Inizializzazione
+# Initialize all import pygame modules
 pygame.init()
 
-# Costanti
-CELL_SIZE = 20
-GRID_WIDTH = 30
-GRID_HEIGHT = 20
-
-WIDTH = GRID_WIDTH * CELL_SIZE
-HEIGHT = GRID_HEIGHT * CELL_SIZE
-
-FPS = 10
-
-# Colori
-BLACK = (30, 30, 30)
-GREEN = (0, 200, 0)
-DARK_GREEN = (0, 150, 0)
-RED = (220, 50, 50)
-WHITE = (255, 255, 255)
-
+# Game window creation
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Snake")
 
+# Timer
 clock = pygame.time.Clock()
 
+# Font for text
 font = pygame.font.SysFont(None, 36)
 
-
-def random_food(snake):
-    while True:
-        food = (
-            random.randint(0, GRID_WIDTH - 1),
-            random.randint(0, GRID_HEIGHT - 1),
-        )
-        if food not in snake:
-            return food
-
-
-def draw_text(text, color, x, y):
+# Function to draw white text
+def draw_text(text: str, color: tuple[int, int, int], x: int, y: int) -> None:
+    """
+    Input:
+        text: string representing the text to display
+        color: tuple representing the color of the text (R, G, B)
+        x: x-coordinate of the text position
+        y: y-coordinate of the text position
+    Output:
+        None
+    """
     img = font.render(text, True, color)
     screen.blit(img, (x, y))
 
+# ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~ 6 ~ 7 ~ 8 ~ 9 ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~
+# ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~ 6 ~GAME START ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~
+# ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~ 6 ~ 7 ~ 8 ~ 9 ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~
 
-def reset_game():
-    snake = [(10, 10)]
-    direction = (1, 0)
-    food = random_food(snake)
-    score = 0
-    return snake, direction, food, score
-
-
+# Initialization of snake first position, first direction, food position and score = 0
 snake, direction, food, score = reset_game()
 
 game_over = False
 
 while True:
-
+    # ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~ 6 ~ 7 ~
+    # ~ 1 ~EVENT MANAGER CYCLE~ 7 ~
+    # ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~ 6 ~ 7 ~
     for event in pygame.event.get():
+        # Generated event from closing X button
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
 
+        # Generated event from any keyboard key
         if event.type == pygame.KEYDOWN:
-
+            
             if game_over:
                 if event.key == pygame.K_r:
                     snake, direction, food, score = reset_game()
@@ -73,7 +58,6 @@ while True:
                 elif event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
-
             else:
                 if event.key == pygame.K_UP and direction != (0, 1):
                     direction = (0, -1)
@@ -86,11 +70,11 @@ while True:
 
     if not game_over:
 
-        head_x, head_y = snake[0]
-        dx, dy = direction
-        new_head = (head_x + dx, head_y + dy)
+        head_x, head_y = snake[0]                   # Head position given by snake list
+        dx, dy = direction                          # Direction vector given by direction tuple
+        new_head = (head_x + dx, head_y + dy)       # New head position
 
-        # Collisione con il muro
+        # Check wall collision
         if (
             new_head[0] < 0
             or new_head[0] >= GRID_WIDTH
@@ -98,24 +82,26 @@ while True:
             or new_head[1] >= GRID_HEIGHT
         ):
             game_over = True
-
-        # Collisione con se stesso
+        # Check self collision
         elif new_head in snake:
             game_over = True
-
+        # Otherwise update the snake position
         else:
+            # Insert a tile in snake in first position using the new_head coordinates
             snake.insert(0, new_head)
-
+            # If the new head is in the same position of food, add score and put another food
             if new_head == food:
                 score += 1
                 food = random_food(snake)
+            # Otherwise it removes the tail (last element), previously added
             else:
                 snake.pop()
 
-    # Disegno
-    screen.fill(BLACK)
+    # Background design
+    #screen.fill(BLACK)
+    chess_background(screen, ORANGE)
 
-    # Cibo
+    # Food design
     pygame.draw.rect(
         screen,
         RED,
@@ -127,7 +113,7 @@ while True:
         ),
     )
 
-    # Serpente
+    # Snake design
     for i, segment in enumerate(snake):
         color = GREEN if i == 0 else DARK_GREEN
         pygame.draw.rect(
