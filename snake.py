@@ -1,6 +1,7 @@
 import sys
 from snake_constants import *
 from snake_functions import *
+import math
 
 # Initialize all import pygame modules
 pygame.init()
@@ -99,7 +100,7 @@ while True:
 
     # Background design
     #screen.fill(BLACK)
-    chess_background(screen, ORANGE)
+    chess_background(screen, BLACK, )
 
     # Food design
     pygame.draw.rect(
@@ -135,4 +136,4 @@ while True:
         draw_text("ESC = Esci", WHITE, WIDTH // 2 - 80, HEIGHT // 2 + 50)
 
     pygame.display.flip()
-    clock.tick(FPS)
+    clock.tick(5+10*math.log(score+1,20))  # Adjust the speed of the game based on the cell size
