@@ -220,7 +220,7 @@ def main_game_loop(screen: pygame.Surface, font: pygame.font.SysFont, clock: pyg
             draw_text(font, screen, "ESC = Esci", WHITE, WIDTH // 2 - 80, HEIGHT // 2 + 50)
 
         pygame.display.flip()
-        clock.tick(FPS)
+        clock.tick(5+10*math.log(score+1,20))  # Adjust the speed of the game based on the cell size
 
 def menu_setting(screen: pygame.Surface, font: pygame.font.SysFont, clock: pygame.time.Clock):
     while True:

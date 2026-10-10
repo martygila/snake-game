@@ -1,4 +1,4 @@
-import random, pygame, sys
+import random, pygame, sys, math
 from collections.abc import Callable
 from snake_constants import *
 
