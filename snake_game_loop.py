@@ -7,10 +7,6 @@ button_height = CELL_SIZE * 3
 type ButtonAction = Callable[[pygame.Surface, pygame.font.Font, pygame.time.Clock], None]
 type ButtonData = tuple[ButtonAction, pygame.Rect]
 
-# ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~ 6 ~ 7 ~ 8 ~ 9 ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~
-# ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~ 6 ~ GAME LOOP ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~
-# ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~ 6 ~ 7 ~ 8 ~ 9 ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~
-
 
 """
 The ButtonPanel is a class used to create menu with buttons.
@@ -23,29 +19,28 @@ the button name and another variable called ButtonData. The latter is a tuple co
 action and the drawed rectangle.
 """
 class ButtonPanel:
-    def __init__(self, buttons: dict[str,ButtonAction],
+    def __init__(self,
                  screen: pygame.Surface,
                  font: pygame.font.SysFont,
                  clock: pygame.time.Clock,
                  mouse: tuple[int, int]):
-        self.buttons = buttons
         self.screen = screen
         self.font = font
         self.clock = clock
         self.mouse = mouse
 
-    def define_buttons(self) -> dict[str,ButtonData]:
-        N_buttons = len(self.buttons)
+    def define_buttons(self,  buttons: dict[str,ButtonAction]) -> dict[str,ButtonData]:
+        N_buttons = len(buttons)
         draw_buttons = {}
-        for index,button in enumerate(self.buttons.keys()):
-            rectangle = pygame.Rect(WIDTH // 2 - button_width // 2,
+        for index,button in enumerate(buttons.keys()):
+            rect = pygame.Rect(WIDTH // 2 - button_width // 2,
                                     HEIGHT // 2 - button_width // 2 + ((index+1) - N_buttons // 2) * ( 1 + button_width // 2),
                                     button_width,
                                     button_height)
-            draw_buttons[button] = (self.buttons[button], rectangle)
+            draw_buttons[button] = (buttons[button], rect)
         return draw_buttons
     
-    def draw_buttons(self, buttons: dict[str,ButtonData]) -> None:
+    def draw_buttons(self, buttons: dict[str,ButtonData], selected_index: int) -> None:
         for index, button in enumerate(buttons.keys()):
             if index == 0:
                 hover_color, normal_color = (RED_LIGHT, RED)
@@ -55,8 +50,9 @@ class ButtonPanel:
                 hover_color, normal_color = (GREEN_LIGHT, GREEN)
             _, rect = buttons[button]
             hovered = rect.collidepoint(self.mouse)
+            selected = index == selected_index
             pygame.draw.rect(self.screen,
-                             hover_color if hovered else normal_color,
+                             hover_color if hovered or selected else normal_color,
                              rect)
             draw_text(self.font,
                       self.screen,
@@ -71,30 +67,40 @@ This class utilizes the new variable ButtonData.
 It is used to manage all the event to perform inside buttons.
 """
 class ButtonEventHandler:
-    def __init__(self, buttons: dict[str,ButtonData],
+    def __init__(self,
                  screen: pygame.Surface,
                  font: pygame.font.SysFont,
-                 clock: pygame.time.Clock,
-                 mouse: tuple[int, int]):
-        self.buttons = buttons
+                 clock: pygame.time.Clock):
         self.screen = screen
         self.font = font
         self.clock = clock
-        self.mouse = mouse
-    def assing_event(self):
+        self.selected_index = 0
+    def assing_event(self, buttons: dict[str,ButtonData]):
+        button_names = list(buttons.keys())
         for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN and len(button_names) != 0:
+                if event.key == pygame.K_DOWN:
+                    self.selected_index = (self.selected_index + 1) % len(button_names)
+                elif event.key == pygame.K_UP:
+                    self.selected_index = (self.selected_index - 1) % len(button_names)
+                elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
+                    action, _ = buttons[button_names[self.selected_index]]
+                    action(self.screen, self.font, self.clock)
             if event.type == pygame.QUIT:
                             pygame.quit()
                             sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                for action, rect in self.buttons.values():
-                    if rect.collidepoint(self.mouse):
+                for action, rect in buttons.values():
+                    if rect.collidepoint(event.pos):
                         action(self.screen, self.font, self.clock)
                         break
 
-
+# ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~ 6 ~ 7 ~ 8 ~ 9 ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~
+# ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~ 6 ~ GAME LOOP ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~
+# ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~ 6 ~ 7 ~ 8 ~ 9 ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~
 
 def menu_start(screen: pygame.Surface, font: pygame.font.SysFont, clock: pygame.time.Clock) -> None:
+    buttonhandler = ButtonEventHandler(screen, font, clock)
     while True:
         screen.fill(BG)
         mouse = pygame.mouse.get_pos()
@@ -106,16 +112,42 @@ def menu_start(screen: pygame.Surface, font: pygame.font.SysFont, clock: pygame.
             'Quit': quit_game
         }
         # Initilize the buttonpanel
-        buttonpanel = ButtonPanel(buttons, screen, font, clock, mouse)
+        buttonpanel = ButtonPanel(screen, font, clock, mouse)
         # Define all the given buttons
-        definedbutton = buttonpanel.define_buttons()
+        definedbutton = buttonpanel.define_buttons(buttons)
         # Draw the defined buttons
-        buttonpanel.draw_buttons(definedbutton)
+        buttonpanel.draw_buttons(definedbutton, buttonhandler.selected_index)
         # Manage the button events
-        buttonhandler = ButtonEventHandler(definedbutton, screen, font, clock, mouse)
-        buttonhandler.assing_event()
+        buttonhandler.assing_event(definedbutton)
 
         pygame.display.update()
+
+def menu_setting(screen: pygame.Surface, font: pygame.font.SysFont, clock: pygame.time.Clock):
+    buttonhandler = ButtonEventHandler(screen, font, clock)
+    while True:
+        screen.fill(BG)
+        mouse = pygame.mouse.get_pos()
+
+        buttons = {
+            'Background': void,
+            'Return': menu_start,
+        }
+
+        buttonpanel = ButtonPanel(screen, font, clock, mouse)
+        definedbutton = buttonpanel.define_buttons(buttons)
+        buttonpanel.draw_buttons(definedbutton, buttonhandler.selected_index)
+        buttonhandler.assing_event(definedbutton)
+        
+
+        pygame.display.update()
+
+
+
+# ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~ 6 ~ 7 ~ 8 ~ 9 ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~
+# ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~ GAME MECHANIC ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~
+# ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~ 6 ~ 7 ~ 8 ~ 9 ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~
+
+
 
 def main_game_loop(screen: pygame.Surface, font: pygame.font.SysFont, clock: pygame.time.Clock) -> None:
     # Initialization of snake first position, first direction, food position and score = 0
@@ -140,6 +172,8 @@ def main_game_loop(screen: pygame.Surface, font: pygame.font.SysFont, clock: pyg
                     if event.key == pygame.K_r:
                         snake, direction, food, score = reset_game()
                         game_over = False
+                    elif event.key == pygame.K_m:
+                        menu_start(screen, font, clock)
                     elif event.key == pygame.K_ESCAPE:
                         pygame.quit()
                         sys.exit()
@@ -184,7 +218,7 @@ def main_game_loop(screen: pygame.Surface, font: pygame.font.SysFont, clock: pyg
 
         # Background design
         screen.fill(BLACK)
-        chess_background(screen, ORANGE)
+        chess_background(screen, BLACK, )
 
         # Food design
         pygame.draw.rect(
@@ -215,29 +249,10 @@ def main_game_loop(screen: pygame.Surface, font: pygame.font.SysFont, clock: pyg
         draw_text(font, screen, f"Punteggio: {score}", WHITE, 10, 10)
 
         if game_over:
-            draw_text(font, screen, "GAME OVER", RED, WIDTH // 2 - 90, HEIGHT // 2 - 40)
-            draw_text(font, screen, "R = Ricomincia", WHITE, WIDTH // 2 - 100, HEIGHT // 2 + 10)
+            draw_text(font, screen, "GAME OVER", RED, WIDTH // 2 - 90, HEIGHT // 2 - 80)
+            draw_text(font, screen, "R = Ricomincia", WHITE, WIDTH // 2 - 100, HEIGHT // 2 -30)
+            draw_text(font, screen, "M = Menù", WHITE, WIDTH // 2 - 70, HEIGHT // 2 + 10)
             draw_text(font, screen, "ESC = Esci", WHITE, WIDTH // 2 - 80, HEIGHT // 2 + 50)
 
         pygame.display.flip()
         clock.tick(5+10*math.log(score+1,20))  # Adjust the speed of the game based on the cell size
-
-def menu_setting(screen: pygame.Surface, font: pygame.font.SysFont, clock: pygame.time.Clock):
-    while True:
-        screen.fill(BG)
-        mouse = pygame.mouse.get_pos()
-
-        buttons = {
-            'Background': void,
-            'Return': menu_start,
-        }
-
-        buttonpanel = ButtonPanel(buttons, screen, font, clock, mouse)
-        definedbutton = buttonpanel.define_buttons()
-        buttonpanel.draw_buttons(definedbutton)
-        buttonhandler = ButtonEventHandler(definedbutton, screen, font, clock, mouse)
-        buttonhandler.assing_event()
-        
-
-        pygame.display.update()
-
