@@ -153,6 +153,7 @@ def menu_setting(screen: pygame.Surface, font: pygame.font.SysFont, clock: pygam
         mouse = pygame.mouse.get_pos()
 
         buttons = {
+            'Food type': change_food_type,
             'Background': void,
             'Return': menu_start,
         }
@@ -165,6 +166,15 @@ def menu_setting(screen: pygame.Surface, font: pygame.font.SysFont, clock: pygam
 
         pygame.display.update()
 
+def change_food_type(screen: pygame.Surface, font: pygame.font.SysFont, clock: pygame.time.Clock, FOOD_TYPE= FOOD_TYPE):
+    food = {0: "BLOCK",
+            1: "ANT",
+            2: "APPLE"}
+    FOOD_TYPE[0] = (FOOD_TYPE[0] + 1) % 3
+    draw_text(font, screen, f"Food changed to {food[FOOD_TYPE[0]]}", WHITE, WIDTH/3, 20)
+        
+    pygame.display.update()
+    pygame.time.delay(1000)
 
 
 # ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~ 6 ~ 7 ~ 8 ~ 9 ~ 1 ~ 2 ~ 3 ~ 4 ~ 5 ~
@@ -254,16 +264,25 @@ def main_game_loop(screen: pygame.Surface, font: pygame.font.SysFont, clock: pyg
         chess_background(screen, [BLACK])
 
         # Food design
-        pygame.draw.rect(
-            screen,
-            RED,
-            (
-                food[0] * CELL_SIZE,
-                food[1] * CELL_SIZE,
-                CELL_SIZE,
-                CELL_SIZE,
-            ),
+        match FOOD_TYPE[0]:
+            case 0:
+                food_image = pygame.Surface((CELL_SIZE, CELL_SIZE))
+                food_image.fill(RED)
+            case 1:
+                food_image = pygame.image.load("./icons/food/ant-with-eye.png").convert_alpha()
+                food_image = pygame.transform.scale(food_image, (CELL_SIZE, CELL_SIZE))
+            case 2:
+                food_image = pygame.image.load("./icons/food/apple1.jpg").convert()
+                food_image = pygame.transform.scale(food_image, (CELL_SIZE, CELL_SIZE))
+
+        food_rect = food_image.get_rect()
+        food_rect.x = food[0] * CELL_SIZE
+        food_rect.y = food[1] * CELL_SIZE 
+        screen.blit(food_image,
+                    food_rect,
+                    special_flags=pygame.BLEND_ALPHA_SDL2,
         )
+
 
         # Snake design
         for i, segment in enumerate(snake):

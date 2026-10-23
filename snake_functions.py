@@ -131,7 +131,7 @@ def insert_player_name(screen: pygame.Surface, font: pygame.font.SysFont, clock:
 
 
 # Function to insert a new high score
-def save_high_score(name: string, score: int, high_scores: list[list[str],list[int]]):
+def save_high_score(name: str, score: int, high_scores: list[list[str],list[int]]):
     if score > high_scores[1][-1]:
         for i in range(N_SCORES):
             if score > high_scores[1][i]:

@@ -24,3 +24,6 @@ WHITE = (255,255,255)
 LIGHT = (170,170,170)
 DARK = (100,100,100)
 BG = (60,25,60)
+
+# Default settings
+FOOD_TYPE = [0,]
